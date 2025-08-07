@@ -1,11 +1,15 @@
 import os
 from dotenv import load_dotenv
 from zeep import Client
-
+from zeep.plugins import HistoryPlugin
+from lxml import etree # type: ignore
 load_dotenv()
 
+
 wsdl = 'http://clswcorrientes.smartmovepro.net/ModuloParadas/SWParadas.asmx?WSDL'
-client = Client(wsdl=wsdl)
+history = HistoryPlugin()
+client = Client(wsdl=wsdl,
+                plugins=[history])
 
 response = client.service.RecuperarLineaPorLocalidad(
     usuario=os.getenv("USUARIO"),
@@ -17,3 +21,6 @@ response = client.service.RecuperarLineaPorLocalidad(
 )
 
 print(response)
+if(history.last_sent != None):
+    print("\n Solicitud (XML enviado):")
+    print(etree.tostring(history.last_sent["envelope"], pretty_print=True).decode())
